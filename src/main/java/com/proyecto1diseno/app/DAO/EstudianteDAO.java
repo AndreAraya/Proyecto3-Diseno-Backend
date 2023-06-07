@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -187,6 +189,27 @@ public class EstudianteDAO {
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
+        }
+    }
+
+    public Optional<Estudiante> validarCredenciales(String correo, String carne) throws SQLException {
+        String sql = "SELECT * FROM Estudiantes WHERE correo = ? AND carne = ?";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, correo);
+            statement.setString(2, carne);
+
+            try (ResultSet result = statement.executeQuery()) {
+                //int carnet = Integer.parseInt(carne);
+                if (result.next()) {
+                    Estudiante estudiante = new Estudiante(
+                        result.getString("correo"),
+                        result.getInt("carne")
+                    );
+                    return Optional.of(estudiante);
+                } else {
+                    return Optional.empty();
+                }
+            }
         }
     }
 

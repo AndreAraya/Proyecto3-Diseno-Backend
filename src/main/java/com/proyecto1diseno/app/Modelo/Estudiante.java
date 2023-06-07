@@ -23,6 +23,11 @@ public class Estudiante {
         this.contrasena = contrasena;
     }
 
+    public Estudiante(String correo, int carnet) {
+        this.correo = correo;
+        this.carnet = carnet;
+    }
+
     public Estudiante (){
         
     }

@@ -11,8 +11,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.proyecto1diseno.app.Servicio.AsistenteAdminService;
+import com.proyecto1diseno.app.Servicio.EstudianteService;
 import com.proyecto1diseno.app.Servicio.ProfesorService;
 import com.proyecto1diseno.app.Modelo.AsistenteAdmin;
+import com.proyecto1diseno.app.Modelo.Estudiante;
 import com.proyecto1diseno.app.Modelo.Profesor;
 
 @RestController
@@ -21,10 +23,12 @@ public class ControladorLogin {
 
     private final ProfesorService servicioProfesor;
     private final AsistenteAdminService servicioAsistenteAdmin;
+    private final EstudianteService servicioEstudiante;
 
-    public ControladorLogin(ProfesorService servicioProfesor, AsistenteAdminService servicioAsistenteAdmin) {
+    public ControladorLogin(ProfesorService servicioProfesor, AsistenteAdminService servicioAsistenteAdmin, EstudianteService servicioEstudiante) {
         this.servicioProfesor = servicioProfesor;
         this.servicioAsistenteAdmin = servicioAsistenteAdmin;
+        this.servicioEstudiante = servicioEstudiante;
     }
  
     @PostMapping
@@ -35,6 +39,7 @@ public class ControladorLogin {
 
         String correo = usuario.get("user");
         String contrasena = usuario.get("password");
+        
  
         // Validar credenciales del Profesor
         Optional<Profesor> profesor = servicioProfesor.validarCredenciales(correo, contrasena);
@@ -47,6 +52,12 @@ public class ControladorLogin {
         if (asistente.isPresent()) {
             return ResponseEntity.ok("Asistente");
         }
+
+         // Validar credenciales del Estudiante
+         Optional<Estudiante> estudiante = servicioEstudiante.validarCredenciales(correo, contrasena);
+         if (estudiante.isPresent()) {
+             return ResponseEntity.ok("Estudiante");
+         }
  
         // Si no se encontró un usuario válido, devolver un error
         return ResponseEntity.badRequest().body("Usuario y/o contraseña incorrectos");

@@ -3,6 +3,7 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -43,5 +44,9 @@ public class EstudianteService {
 
     public String insertarEstudiante(Estudiante estudiante) throws SQLException{
         return estudianteDAO.insertarEstudiante(estudiante);
+    }
+
+    public Optional<Estudiante> validarCredenciales(String correo, String carne) throws SQLException {
+        return estudianteDAO.validarCredenciales(correo, carne);
     }
 }

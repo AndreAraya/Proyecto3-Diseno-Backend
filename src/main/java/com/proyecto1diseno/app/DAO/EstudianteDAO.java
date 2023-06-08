@@ -213,5 +213,26 @@ public class EstudianteDAO {
         }
     }
 
+    public String modificarEstudiante2(Estudiante estudiante) throws SQLException {
+        String sqlCheckEmail = "SELECT carne FROM Estudiantes WHERE correo = ?";
+        String sqlUpdate = "UPDATE Estudiantes SET numeroCelular = ? WHERE carne = ?";
+        
+        try (PreparedStatement checkEmailStatement = connection.prepareStatement(sqlCheckEmail);
+             PreparedStatement updateStatement = connection.prepareStatement(sqlUpdate)) {
+            
+            checkEmailStatement.setString(1, estudiante.getCorreo());
+            log.info("AQUI");
+            log.info(estudiante.getCorreo());
+            ResultSet resultSet = checkEmailStatement.executeQuery();
+            
+            if (resultSet.next()) {
+                    updateStatement.setInt(6, estudiante.getCelular());
+                    updateStatement.executeUpdate();
+                    return "Modificación exitosa.";
+        } 
+    }
+    return "Error";
+} 
+
 }  
 

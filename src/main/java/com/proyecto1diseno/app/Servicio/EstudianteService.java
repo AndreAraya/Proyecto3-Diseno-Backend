@@ -49,4 +49,8 @@ public class EstudianteService {
     public Optional<Estudiante> validarCredenciales(String correo, String carne) throws SQLException {
         return estudianteDAO.validarCredenciales(correo, carne);
     }
+
+    public String modificarEstudiante2(Estudiante estudiante) throws SQLException {
+        return estudianteDAO.modificarEstudiante2(estudiante);
+    }
 }

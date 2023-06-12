@@ -221,4 +221,12 @@ public class ControladorEstudiante {
             }
         }   
 
+        @PostMapping("/perfilEst")
+        public ResponseEntity<String> getEstudiante2(@RequestBody Map<String, Object> requestBody) throws SQLException {
+            String correo = (String) requestBody.get("user");
+            Estudiante estudianteAMostrar = estudianteService.getEstudiante2(correo);
+            Gson gson = new Gson();
+            String jsonEstudiante = gson.toJson(estudianteAMostrar);
+            return ResponseEntity.ok().body(jsonEstudiante);
+            }
 }

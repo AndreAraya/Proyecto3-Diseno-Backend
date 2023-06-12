@@ -53,4 +53,14 @@ public class EstudianteService {
     public String modificarEstudiante2(Estudiante estudiante) throws SQLException {
         return estudianteDAO.modificarEstudiante2(estudiante);
     }
+
+    public Estudiante getEstudiante2(String correo) throws SQLException {
+        Estudiante estudianteEncontrado = estudianteDAO.getEstudiante2(correo);
+
+        if (estudianteEncontrado == null) {
+            throw new NoSuchElementException("Estudiante no encontrado");
+        }
+
+        return estudianteEncontrado;
+    }
 }

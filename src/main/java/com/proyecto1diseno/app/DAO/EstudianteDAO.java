@@ -227,7 +227,8 @@ public class EstudianteDAO {
             System.out.println("Modificación exitosa.");
             return "Modificación exitosa.";
         } 
-    
+    }
+
     public String subscribirObservador(String user) {
         String obtenerIdEstudianteQuery = "SELECT id FROM Estudiantes WHERE correo = ?";
         String insertarReceptorNotificacionQuery = "INSERT INTO ReceptoresNotificaciones (idReceptor, idNotificacion, idTipoUsuario) VALUES (?, 0, 2)";
@@ -254,6 +255,7 @@ public class EstudianteDAO {
             return "Error: Error en la suscripción";
         }
     }
+
 
     public List<Map<String, Object>> obtenerNotificaciones(String user) {
         List<Map<String, Object>> notificaciones = new ArrayList<>();
@@ -313,8 +315,6 @@ public class EstudianteDAO {
 
         return notificaciones;
     }
-
-    }
  
 
     public Estudiante getEstudiante2(String correo) throws SQLException {
@@ -372,7 +372,7 @@ public class EstudianteDAO {
                 } else {
                     return "Error";
                 }
-        } 
+            } 
     
         }
     }

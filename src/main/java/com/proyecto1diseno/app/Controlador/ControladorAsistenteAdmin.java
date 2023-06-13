@@ -91,6 +91,29 @@ public class ControladorAsistenteAdmin implements Observador {
         }
     }
 
+    @PostMapping("/delNotif")
+    public ResponseEntity<String> eliminarNotificacion(@RequestBody Map<String, Object> requestBody) throws SQLException {
+        String user = (String) requestBody.get("user");
+        int idNotificacion = (int) requestBody.get("idNotif");
+        String respuesta = asistenteAdminService.eliminarNotificacion(idNotificacion, user);
+        if (respuesta.startsWith("Error: ")) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(respuesta);
+        } else {
+            return ResponseEntity.ok().body("Notificacion eliminada exitosamente.");
+        }
+    }
+
+    @PostMapping("/delNotifs")
+        public ResponseEntity<String> eliminarNotificaciones(@RequestBody Map<String, Object> requestBody) throws SQLException {
+            String user = (String) requestBody.get("user");
+            String respuesta = asistenteAdminService.eliminarNotificaciones(user);
+            if (respuesta.startsWith("Error: ")) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(respuesta);
+            } else {
+                return ResponseEntity.ok().body(respuesta);
+            }
+        }
+
     @Override
     public void notificar(Notificacion notificacion) {
         asistenteAdminService.notificar(observadorUser, notificacion);

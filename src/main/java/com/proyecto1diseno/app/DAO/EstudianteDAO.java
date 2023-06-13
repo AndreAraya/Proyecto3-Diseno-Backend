@@ -283,9 +283,9 @@ public class EstudianteDAO {
         }
 
         // Obtener las notificaciones del estudiante con el ID obtenido
-        String obtenerNotificacionesQuery = "SELECT n.emisor, n.fecha, n.contenido, rn.leido FROM Notificaciones n " +
-                "INNER JOIN ReceptoresNotificaciones rn ON n.id = rn.idNotificacion " +
-                "WHERE rn.idReceptor = ? AND rn.idNotificacion <> 0";
+        String obtenerNotificacionesQuery = "SELECT n.emisor, n.fecha, n.contenido, rn.leido, rn.idNotificacion FROM Notificaciones n " +
+            "INNER JOIN ReceptoresNotificaciones rn ON n.id = rn.idNotificacion " +
+            "WHERE rn.idReceptor = ? AND rn.idNotificacion <> 0";
 
         try {
             // Preparar la consulta para obtener las notificaciones
@@ -297,6 +297,7 @@ public class EstudianteDAO {
 
             // Recorrer los resultados y agregarlos al mapa de notificaciones
             while (resultado.next()) {
+                int idNotificacion = resultado.getInt("idNotificacion");
                 int emisor = resultado.getInt("emisor");
                 int usuario = resultado.getInt("idTipoUsuario");
                 String fecha = resultado.getString("fecha");
@@ -306,9 +307,10 @@ public class EstudianteDAO {
                 String nombreEmisor = obtenerUsuarioEmisor(usuario, emisor);
 
                 Map<String, Object> notificacion = new HashMap<>();
+                notificacion.put("id", idNotificacion);
                 notificacion.put("emisor", nombreEmisor);
                 notificacion.put("fecha", fecha);
-                notificacion.put("contenido", contenido);
+                notificacion.put("mensaje", contenido);
                 notificacion.put("leido", leida);
 
                 notificaciones.add(notificacion);
@@ -518,6 +520,65 @@ public class EstudianteDAO {
         } catch (SQLException e) {
             e.printStackTrace();
             log.info("Fallo en la inserción en la tabla ReceptoresNotificaciones");
+        }
+    }
+
+    public String eliminarNotificacion(Object idNotificacion, String user) {
+        try {
+            int idEstudiante = 0;
+            
+            // Buscar el ID del estudiante basado en el correo del usuario
+            String query = "SELECT idEstudiante FROM Estudiantes WHERE correo = ?";
+            PreparedStatement stmt = connection.prepareStatement(query);
+            stmt.setString(1, user);
+            ResultSet rs = stmt.executeQuery();
+            
+            if (rs.next()) {
+                idEstudiante = rs.getInt("idEstudiante");
+            } else {
+                return "Error: No se encontró ningún estudiante con ese correo.";
+            }
+            
+            // Eliminar registros de la tabla basado en el ID del estudiante y la notificación
+            query = "DELETE FROM ReceptoresNotificaciones WHERE idEstudiante = ? AND idNotificacion = ?";
+            stmt = connection.prepareStatement(query);
+            stmt.setInt(1, idEstudiante);
+            stmt.setInt(2, (int) idNotificacion);
+            stmt.executeUpdate();
+            
+            return "Notificacion eliminada exitosamente.";
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return "Error: Ocurrió un error al eliminar las notificaciones.";
+        }
+    }
+
+    public String eliminarNotificaciones(String user) {
+        try {
+            String idEstudiante = null;
+            
+            // Buscar el ID del estudiante basado en el correo del usuario
+            String query = "SELECT idEstudiante FROM Estudiantes WHERE correo = ?";
+            PreparedStatement stmt = connection.prepareStatement(query);
+            stmt.setString(1, user);
+            ResultSet rs = stmt.executeQuery();
+            
+            if (rs.next()) {
+                idEstudiante = rs.getString("idEstudiante");
+            } else {
+                return "Error: No se encontró ningún estudiante con ese correo.";
+            }
+            
+            // Eliminar registros de la tabla ReceptoresNotificaciones basados en el ID del estudiante
+            query = "DELETE FROM ReceptoresNotificaciones WHERE idReceptor = ?";
+            stmt = connection.prepareStatement(query);
+            stmt.setString(1, idEstudiante);
+            int rowsAffected = stmt.executeUpdate();
+            
+            return "Se eliminaron " + rowsAffected + " notificaciones.";
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return "Error: Ocurrió un error al eliminar las notificaciones.";
         }
     }
 

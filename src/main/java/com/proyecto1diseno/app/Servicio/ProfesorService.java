@@ -82,6 +82,14 @@ public class ProfesorService {
         profesorDAO.notificar(observadorUser, notificacion);
     }
 
+    public String eliminarNotificacion(int idNotificacion, String user) {
+        return profesorDAO.eliminarNotificacion(idNotificacion, user);
+    }
+
+    public String eliminarNotificaciones(String user) {
+        return profesorDAO.eliminarNotificaciones(user);
+    }
+
 
     
 }

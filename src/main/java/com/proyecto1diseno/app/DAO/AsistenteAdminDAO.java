@@ -242,34 +242,92 @@ public class AsistenteAdminDAO {
     }
 
     public void notificar(String observadorUser, Notificacion notificacion) {
-    String buscarIdAsistenteQuery = "SELECT idAsistente FROM Asistentes WHERE correo = ?";
-    try {
-        PreparedStatement buscarIdAsistenteStmt = connection.prepareStatement(buscarIdAsistenteQuery);
-        buscarIdAsistenteStmt.setString(1, observadorUser);
-        ResultSet resultado = buscarIdAsistenteStmt.executeQuery();
+        String buscarIdAsistenteQuery = "SELECT idAsistente FROM Asistentes WHERE correo = ?";
+        try {
+            PreparedStatement buscarIdAsistenteStmt = connection.prepareStatement(buscarIdAsistenteQuery);
+            buscarIdAsistenteStmt.setString(1, observadorUser);
+            ResultSet resultado = buscarIdAsistenteStmt.executeQuery();
 
-        if (resultado.next()) {
-            // Obtener el ID del asistente
-            int idAsistente = resultado.getInt("idAsistente");
+            if (resultado.next()) {
+                // Obtener el ID del asistente
+                int idAsistente = resultado.getInt("idAsistente");
 
-            // Insertar un registro en la tabla ReceptoresNotificaciones
-            String insertarReceptorQuery = "INSERT INTO ReceptoresNotificaciones (idReceptor, idNotificacion, idTipoUsuario, Leida, Eliminada) " +
-                    "VALUES (?, ?, 3, 0, 0)";
-            try {
-                PreparedStatement insertarReceptorStmt = connection.prepareStatement(insertarReceptorQuery);
-                insertarReceptorStmt.setInt(1, idAsistente);
-                insertarReceptorStmt.setInt(2, notificacion.getIdNotificacion());
-                insertarReceptorStmt.executeUpdate();
-            } catch (SQLException e) {
-                e.printStackTrace();
-                log.info("Fallo en la inserción en la tabla ReceptoresNotificaciones");
+                // Insertar un registro en la tabla ReceptoresNotificaciones
+                String insertarReceptorQuery = "INSERT INTO ReceptoresNotificaciones (idReceptor, idNotificacion, idTipoUsuario, Leida, Eliminada) " +
+                        "VALUES (?, ?, 3, 0, 0)";
+                try {
+                    PreparedStatement insertarReceptorStmt = connection.prepareStatement(insertarReceptorQuery);
+                    insertarReceptorStmt.setInt(1, idAsistente);
+                    insertarReceptorStmt.setInt(2, notificacion.getIdNotificacion());
+                    insertarReceptorStmt.executeUpdate();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                    log.info("Fallo en la inserción en la tabla ReceptoresNotificaciones");
+                }
+            } else {
+                log.info("No se encuentra el asistente con el correo proporcionado");
             }
-        } else {
-            log.info("No se encuentra el asistente con el correo proporcionado");
+        } catch (SQLException e) {
+            e.printStackTrace();
+            log.info("Fallo en la inserción en la tabla ReceptoresNotificaciones");
         }
-    } catch (SQLException e) {
-        e.printStackTrace();
-        log.info("Fallo en la inserción en la tabla ReceptoresNotificaciones");
     }
-}
+
+    public String eliminarNotificacion(Object idNotificacion, String user) {
+        try {
+            int idAsistente = 0;
+            
+            // Buscar el ID del asistente basado en el correo del usuario
+            String query = "SELECT idAsistente FROM Asistentes WHERE correo = ?";
+            PreparedStatement stmt = connection.prepareStatement(query);
+            stmt.setString(1, user);
+            ResultSet rs = stmt.executeQuery();
+            
+            if (rs.next()) {
+                idAsistente = rs.getInt("idAsistente");
+            } else {
+                return "Error: No se encontró ningún asistente.";
+            }
+            
+            // Eliminar registros de la tabla basado en el ID del asistente y la notificación
+            query = "DELETE FROM ReceptoresNotificaciones WHERE idAsistente = ? AND idNotificacion = ?";
+            stmt = connection.prepareStatement(query);
+            stmt.setInt(1, idAsistente);
+            stmt.setInt(2, (int) idNotificacion);
+            
+            return "Notificacion eliminada exitosamente.";
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return "Error: Ocurrió un error al eliminar las notificaciones.";
+        }
+    }
+
+    public String eliminarNotificaciones(String user) {
+        try {
+            String idAsistente = null;
+            
+            // Buscar el ID del asistente basado en el correo del usuario
+            String query = "SELECT idAsistente FROM Asistentes WHERE correo = ?";
+            PreparedStatement stmt = connection.prepareStatement(query);
+            stmt.setString(1, user);
+            ResultSet rs = stmt.executeQuery();
+            
+            if (rs.next()) {
+                idAsistente = rs.getString("idAsistente");
+            } else {
+                return "Error: No se encontró ningún asistente";
+            }
+            
+            // Eliminar registros de la tabla ReceptoresNotificaciones basados en el ID del asistente
+            query = "DELETE FROM ReceptoresNotificaciones WHERE idReceptor = ?";
+            stmt = connection.prepareStatement(query);
+            stmt.setString(1, idAsistente);
+            int rowsAffected = stmt.executeUpdate();
+            
+            return "Se eliminaron " + rowsAffected + " notificaciones.";
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return "Error: Ocurrió un error al eliminar las notificaciones.";
+        }
+    }
 }

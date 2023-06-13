@@ -84,4 +84,12 @@ public class EstudianteService {
     public void notificar(String observadorUser, Notificacion notificacion) {
         estudianteDAO.notificar(observadorUser, notificacion);
     }
+
+    public String eliminarNotificacion(int idNotificacion, String user) {
+        return estudianteDAO.eliminarNotificacion(idNotificacion, user);
+    }
+
+    public String eliminarNotificaciones(String user) {
+       return estudianteDAO.eliminarNotificaciones(user);
+    }
 }

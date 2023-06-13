@@ -53,4 +53,12 @@ public class AsistenteAdminService {
     public void notificar(String observadorUser, Notificacion notificacion) {
         asistenteDAO.notificar(observadorUser, notificacion);
     }
+
+    public String eliminarNotificacion(int idNotificacion, String user) {
+        return asistenteDAO.eliminarNotificacion(idNotificacion, user);
+    }
+
+    public String eliminarNotificaciones(String user) {
+        return asistenteDAO.eliminarNotificaciones(user);
+    }
 }

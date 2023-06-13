@@ -302,6 +302,29 @@ public class ControladorEstudiante implements Observador {
             }
         }
 
+        @PostMapping("/delNotif")
+        public ResponseEntity<String> eliminarNotificacion(@RequestBody Map<String, Object> requestBody) throws SQLException {
+            String user = (String) requestBody.get("user");
+            int idNotificacion = (int) requestBody.get("idNotif");
+            String respuesta = estudianteService.eliminarNotificacion(idNotificacion, user);
+            if (respuesta.startsWith("Error: ")) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(respuesta);
+            } else {
+                return ResponseEntity.ok().body(respuesta);
+            }
+        }
+
+        @PostMapping("/delNotifs")
+        public ResponseEntity<String> eliminarNotificaciones(@RequestBody Map<String, Object> requestBody) throws SQLException {
+            String user = (String) requestBody.get("user");
+            String respuesta = estudianteService.eliminarNotificaciones(user);
+            if (respuesta.startsWith("Error: ")) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(respuesta);
+            } else {
+                return ResponseEntity.ok().body(respuesta);
+            }
+        }
+
         @Override
         public void notificar(Notificacion notificacion) {
             estudianteService.notificar(observadorUser, notificacion);

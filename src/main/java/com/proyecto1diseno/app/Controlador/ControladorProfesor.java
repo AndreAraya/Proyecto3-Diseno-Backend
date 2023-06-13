@@ -18,11 +18,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.gson.Gson;
-import com.proyecto1diseno.app.Modelo.Estudiante;
 import com.proyecto1diseno.app.Modelo.Notificacion;
 import com.proyecto1diseno.app.Modelo.Observador;
 import com.proyecto1diseno.app.Modelo.Profesor;
-import com.proyecto1diseno.app.Servicio.EstudianteService;
 import com.proyecto1diseno.app.Servicio.NotificacionService;
 import com.proyecto1diseno.app.Servicio.ProfesorService;
 
@@ -184,6 +182,29 @@ public class ControladorProfesor implements Observador {
             notificacion.setEmisor(idEmisor);
             notificacionService.notificar(notificacion);
             return ResponseEntity.ok().body("Notificacion agregada exitosamente.");
+        }
+    }
+
+    @PostMapping("/delNotif")
+    public ResponseEntity<String> eliminarNotificacion(@RequestBody Map<String, Object> requestBody) throws SQLException {
+        String user = (String) requestBody.get("user");
+        int idNotificacion = (int) requestBody.get("idNotif");
+        String respuesta = profesorService.eliminarNotificacion(idNotificacion, user);
+        if (respuesta.startsWith("Error: ")) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(respuesta);
+        } else {
+            return ResponseEntity.ok().body("Notificacion eliminada exitosamente.");
+        }
+    }
+
+    @PostMapping("/delNotifs")
+    public ResponseEntity<String> eliminarNotificaciones(@RequestBody Map<String, Object> requestBody) throws SQLException {
+        String user = (String) requestBody.get("user");
+        String respuesta = profesorService.eliminarNotificaciones(user);
+        if (respuesta.startsWith("Error: ")) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(respuesta);
+        } else {
+            return ResponseEntity.ok().body("Notificaciones eliminadas exitosamente.");
         }
     }
 

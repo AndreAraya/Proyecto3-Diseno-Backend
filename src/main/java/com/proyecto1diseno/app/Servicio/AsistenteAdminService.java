@@ -15,6 +15,7 @@ import com.proyecto1diseno.app.DAO.EstudianteDAO;
 import com.proyecto1diseno.app.Modelo.Actividad;
 import com.proyecto1diseno.app.Modelo.AsistenteAdmin;
 import com.proyecto1diseno.app.Modelo.EquipoGuia;
+import com.proyecto1diseno.app.Modelo.Notificacion;
 import com.proyecto1diseno.app.Modelo.PlanTrabajo;
 import com.proyecto1diseno.app.Modelo.Profesor;
 
@@ -43,5 +44,13 @@ public class AsistenteAdminService {
 
     public List<Map<String, Object>> obtenerNotificaciones(String user) {
         return asistenteDAO.obtenerNotificaciones(user);
+    }
+
+    public String agregarNotificacion(Notificacion notificacion, String user) {
+        return asistenteDAO.agregarNotificacion(notificacion, user);
+    }
+
+    public void notificar(String observadorUser, Notificacion notificacion) {
+        asistenteDAO.notificar(observadorUser, notificacion);
     }
 }

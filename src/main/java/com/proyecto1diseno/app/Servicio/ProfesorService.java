@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import com.proyecto1diseno.app.DAO.DBManager;
 import com.proyecto1diseno.app.DAO.ProfesorDAO;
+import com.proyecto1diseno.app.Modelo.Notificacion;
 import com.proyecto1diseno.app.Modelo.Profesor;
 
 @Service
@@ -71,6 +72,14 @@ public class ProfesorService {
 
     public List<Map<String, Object>> obtenerNotificaciones(String user) {
         return profesorDAO.obtenerNotificaciones(user);
+    }
+
+    public String agregarNotificacion(Notificacion notificacion, String user) {
+        return profesorDAO.agregarNotificacion(notificacion, user);
+    }
+
+    public void notificar(String observadorUser, Notificacion notificacion) {
+        profesorDAO.notificar(observadorUser, notificacion);
     }
 
 

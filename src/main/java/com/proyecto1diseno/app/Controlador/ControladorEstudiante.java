@@ -6,8 +6,10 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Map;
 
 import javax.sound.midi.SysexMessage;
@@ -250,29 +252,59 @@ public class ControladorEstudiante implements Observador {
             Gson gson = new Gson();
             String jsonCelular = gson.toJson(celular);
             return ResponseEntity.ok().body(jsonCelular);
-            }
+        }
+
         @PostMapping("/subscribirObservador")
         public ResponseEntity<String> subscribirObservador(@RequestBody Map<String, Object> requestBody) throws SQLException {
             String user = (String)  requestBody.get("user");
             String respuestaSubscripcion = estudianteService.subscribirObservador(user);
-            notificacionService.agregarObservador(this);
             if (respuestaSubscripcion.startsWith("Error: ")) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(respuestaSubscripcion);
             } else {
+                notificacionService.agregarObservador(this);
                 return ResponseEntity.ok().body(respuestaSubscripcion);
             }
         }
+
+        String observadorUser = null;
 
         @PostMapping("/gestionarBuzon")
         public ResponseEntity<List<Map<String,Object>>> obtenerNotificaciones(@RequestBody Map<String, Object> requestBody) throws SQLException, JsonProcessingException {
             String user = (String) requestBody.get("user");
             List<Map<String, Object>> notificaciones = estudianteService.obtenerNotificaciones(user);
-            return ResponseEntity.ok().body(notificaciones);
+            if (notificaciones == null || notificaciones.isEmpty()) {
+                log.info("Error: No estas suscrito al sistema de notificaciones.");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Collections.emptyList());
+            } else {
+                observadorUser = user;
+                return ResponseEntity.ok().body(notificaciones);
+            }
+        }
+
+        @PostMapping("/agregarNotif")
+        public ResponseEntity<String> agregarNotificacion(@RequestBody Map<String, Object> requestBody) throws SQLException {
+            String user = (String) requestBody.get("user");
+            Notificacion notificacion = new Notificacion();
+            notificacion.setContenido((String) requestBody.get("correo"));
+            notificacion.setFechaHora(LocalDateTime.now());
+            notificacion.setLeida(false);
+            String respuesta = estudianteService.agregarNotificacion(notificacion, user);
+            if (respuesta.startsWith("Error: ")) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(respuesta);
+            } else {
+                String[] partes = respuesta.split(" ");
+                int idEmisor = Integer.parseInt(partes[0]);
+                int idNotificacion = Integer.parseInt(partes[1]);
+                notificacion.setIdNotificacion(idNotificacion);
+                notificacion.setEmisor(idEmisor);
+                notificacionService.notificar(notificacion);
+                return ResponseEntity.ok().body("Notificacion agregada exitosamente.");
+            }
         }
 
         @Override
         public void notificar(Notificacion notificacion) {
-            throw new UnsupportedOperationException("Unimplemented method 'actualizar'");
+            estudianteService.notificar(observadorUser, notificacion);
         }
 
 }

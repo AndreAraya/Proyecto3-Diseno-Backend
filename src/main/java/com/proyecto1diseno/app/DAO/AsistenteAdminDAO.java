@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -11,6 +12,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import com.proyecto1diseno.app.Modelo.AsistenteAdmin;
+import com.proyecto1diseno.app.Modelo.Notificacion;
 
 public class AsistenteAdminDAO {
     private final Connection connection;
@@ -104,13 +106,16 @@ public class AsistenteAdminDAO {
 
             // Recorrer los resultados y agregarlos al mapa de notificaciones
             while (resultado.next()) {
-                String emisor = resultado.getString("emisor");
+                int emisor = resultado.getInt("emisor");
+                int usuario = resultado.getInt("idTipoUsuario");
                 String fecha = resultado.getString("fecha");
                 String contenido = resultado.getString("contenido");
                 boolean leida = resultado.getBoolean("leida");
 
+                String nombreEmisor = obtenerUsuarioEmisor(usuario, emisor);
+
                 Map<String, Object> notificacion = new HashMap<>();
-                notificacion.put("emisor", emisor);
+                notificacion.put("emisor", nombreEmisor);
                 notificacion.put("fecha", fecha);
                 notificacion.put("contenido", contenido);
                 notificacion.put("leido", leida);
@@ -124,4 +129,144 @@ public class AsistenteAdminDAO {
 
         return notificaciones;
     }
+
+    public String obtenerUsuarioEmisor(int usuario, int emisor) {
+        String nombreCompleto = null;
+
+        if (usuario == 2) {
+            String obtenerNombreEstudianteQuery = "SELECT CONCAT(nombre, ' ', apellido1, ' ', apellido2) AS nombreCompleto " +
+                    "FROM Estudiantes WHERE idEstudiante = ?";
+
+            try {
+                // Preparar la consulta para obtener el nombre del estudiante
+                PreparedStatement obtenerNombreEstudianteStmt = connection.prepareStatement(obtenerNombreEstudianteQuery);
+                obtenerNombreEstudianteStmt.setInt(1, emisor);
+
+                // Ejecutar la consulta para obtener el nombre del estudiante
+                ResultSet resultado = obtenerNombreEstudianteStmt.executeQuery();
+
+                if (resultado.next()) {
+                    nombreCompleto = resultado.getString("nombreCompleto");
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+                return nombreCompleto;
+            }
+        } else if (usuario == 1) {
+            String obtenerNombreProfesorQuery = "SELECT nombre FROM Profesores WHERE idProfesor = ?";
+
+            try {
+                // Preparar la consulta para obtener el nombre del profesor
+                PreparedStatement obtenerNombreProfesorStmt = connection.prepareStatement(obtenerNombreProfesorQuery);
+                obtenerNombreProfesorStmt.setInt(1, emisor);
+
+                // Ejecutar la consulta para obtener el nombre del profesor
+                ResultSet resultado = obtenerNombreProfesorStmt.executeQuery();
+
+                if (resultado.next()) {
+                    nombreCompleto = resultado.getString("nombre");
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+                return nombreCompleto;
+            }
+        } else if (usuario == 3) {
+            String obtenerNombreAsistenteQuery = "SELECT nombre FROM Asistentes WHERE idAsistente = ?";
+
+            try {
+                // Preparar la consulta para obtener el nombre del asistente
+                PreparedStatement obtenerNombreAsistenteStmt = connection.prepareStatement(obtenerNombreAsistenteQuery);
+                obtenerNombreAsistenteStmt.setInt(1, emisor);
+
+                // Ejecutar la consulta para obtener el nombre del asistente
+                ResultSet resultado = obtenerNombreAsistenteStmt.executeQuery();
+
+                if (resultado.next()) {
+                    nombreCompleto = resultado.getString("nombre");
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+                return nombreCompleto;
+            }
+        }
+
+        return nombreCompleto;
+    }
+
+    public String agregarNotificacion(Notificacion notificacion, String user) {
+        String idAsistente = null;
+        String idNotificacion = null;
+
+        // Buscar el ID del asistente en la tabla Asistentes
+        String buscarIdAsistenteQuery = "SELECT idAsistente FROM Asistentes WHERE correo = ?";
+        try {
+            PreparedStatement buscarIdAsistenteStmt = connection.prepareStatement(buscarIdAsistenteQuery);
+            buscarIdAsistenteStmt.setString(1, user);
+            ResultSet resultado = buscarIdAsistenteStmt.executeQuery();
+
+            if (resultado.next()) {
+                // Obtener el ID del asistente
+                idAsistente = resultado.getString("idAsistente");
+
+                // Insertar un registro en la tabla Notificaciones
+                String insertarNotificacionQuery = "INSERT INTO Notificaciones (idEmisor, fecha, contenido, idTipoUsuario) " +
+                        "VALUES (?, ?, ?, 3)";
+                try {
+                    PreparedStatement insertarNotificacionStmt = connection.prepareStatement(insertarNotificacionQuery);
+                    insertarNotificacionStmt.setString(1, idAsistente);
+                    insertarNotificacionStmt.setTimestamp(2, Timestamp.valueOf(notificacion.getFechaHora()));
+                    insertarNotificacionStmt.setString(3, notificacion.getContenido());
+                    insertarNotificacionStmt.executeUpdate();
+
+                    ResultSet generatedKeys = insertarNotificacionStmt.getGeneratedKeys();
+                    if (generatedKeys.next()) {
+                        idNotificacion = generatedKeys.getString(1);
+                    } else {
+                        // Si no se obtiene el ID, se muestra un mensaje de error
+                        return "Error: No se pudo obtener el ID de la notificación agregada";
+                    }
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                    return "Error: Error";
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+
+        return idAsistente + " " + idNotificacion;
+    }
+
+    public void notificar(String observadorUser, Notificacion notificacion) {
+    String buscarIdAsistenteQuery = "SELECT idAsistente FROM Asistentes WHERE correo = ?";
+    try {
+        PreparedStatement buscarIdAsistenteStmt = connection.prepareStatement(buscarIdAsistenteQuery);
+        buscarIdAsistenteStmt.setString(1, observadorUser);
+        ResultSet resultado = buscarIdAsistenteStmt.executeQuery();
+
+        if (resultado.next()) {
+            // Obtener el ID del asistente
+            int idAsistente = resultado.getInt("idAsistente");
+
+            // Insertar un registro en la tabla ReceptoresNotificaciones
+            String insertarReceptorQuery = "INSERT INTO ReceptoresNotificaciones (idReceptor, idNotificacion, idTipoUsuario, Leida, Eliminada) " +
+                    "VALUES (?, ?, 3, 0, 0)";
+            try {
+                PreparedStatement insertarReceptorStmt = connection.prepareStatement(insertarReceptorQuery);
+                insertarReceptorStmt.setInt(1, idAsistente);
+                insertarReceptorStmt.setInt(2, notificacion.getIdNotificacion());
+                insertarReceptorStmt.executeUpdate();
+            } catch (SQLException e) {
+                e.printStackTrace();
+                log.info("Fallo en la inserción en la tabla ReceptoresNotificaciones");
+            }
+        } else {
+            log.info("No se encuentra el asistente con el correo proporcionado");
+        }
+    } catch (SQLException e) {
+        e.printStackTrace();
+        log.info("Fallo en la inserción en la tabla ReceptoresNotificaciones");
+    }
+}
 }

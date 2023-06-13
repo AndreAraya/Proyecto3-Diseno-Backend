@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import com.proyecto1diseno.app.DAO.DBManager;
 import com.proyecto1diseno.app.DAO.EstudianteDAO;
 import com.proyecto1diseno.app.Modelo.Estudiante;
+import com.proyecto1diseno.app.Modelo.Notificacion;
 
 @Service
 public class EstudianteService {
@@ -74,5 +75,13 @@ public class EstudianteService {
 
     public List<Map<String, Object>> obtenerNotificaciones(String user) {
         return estudianteDAO.obtenerNotificaciones(user);
+    }
+
+    public String agregarNotificacion(Notificacion notificacion, String user) {
+        return estudianteDAO.agregarNotificacion(notificacion, user);
+    }
+
+    public void notificar(String observadorUser, Notificacion notificacion) {
+        estudianteDAO.notificar(observadorUser, notificacion);
     }
 }

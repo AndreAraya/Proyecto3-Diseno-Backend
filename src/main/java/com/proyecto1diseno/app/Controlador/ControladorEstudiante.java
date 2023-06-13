@@ -214,6 +214,43 @@ public class ControladorEstudiante implements Observador {
             }
         }
 
+        @PostMapping("/cambiarNumEst")
+        public ResponseEntity<String> modificarEstudiante2(@RequestBody Map<String, Object> estudianteData) throws SQLException {
+            System.out.println("ESTUDIANTE");
+            System.out.println(estudianteData);
+            String correo = (String) estudianteData.get("user");
+            String celular = (String) estudianteData.get("cel");
+            System.out.println("CELULAR");
+            System.out.println(celular);
+            String respuestaModificar = estudianteService.modificarEstudiante2(correo ,celular);
+            if (respuestaModificar.startsWith("Error: ")) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(respuestaModificar);
+            } else {
+                return ResponseEntity.ok().body(respuestaModificar);
+            }
+        }   
+
+        @PostMapping("/perfilEst")
+        public ResponseEntity<String> getEstudiante2(@RequestBody Map<String, Object> requestBody) throws SQLException {
+            String correo = (String) requestBody.get("user");
+            Estudiante estudianteAMostrar = estudianteService.getEstudiante2(correo);
+            Gson gson = new Gson();
+            String jsonEstudiante = gson.toJson(estudianteAMostrar);
+            return ResponseEntity.ok().body(jsonEstudiante);
+            }
+
+        @PostMapping("/mostCel")
+        public ResponseEntity<String> mostrarCelular(@RequestBody Map<String, Object> requestBody) throws SQLException {
+            String correo = (String) requestBody.get("user");
+            System.out.println("correo");
+            System.out.println(correo);
+            String celular = estudianteService.mostrarCelular(correo);
+            System.out.println("celular");
+            System.out.println(celular);
+            Gson gson = new Gson();
+            String jsonCelular = gson.toJson(celular);
+            return ResponseEntity.ok().body(jsonCelular);
+            }
         @PostMapping("/subscribirObservador")
         public ResponseEntity<String> subscribirObservador(@RequestBody Map<String, Object> requestBody) throws SQLException {
             String user = (String)  requestBody.get("user");

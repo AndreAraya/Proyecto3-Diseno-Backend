@@ -60,7 +60,6 @@ public class EstudianteDAO {
         Estudiante estudianteEncontrado = null;
         
         int carnetNum = Integer.parseInt(carnet);
-        
         //int carnetNum = 2020087412;
         
         try {
@@ -213,6 +212,22 @@ public class EstudianteDAO {
         }
     }
 
+    public String modificarEstudiante2(String correo, String celular) throws SQLException {
+        //String celular = mostrarCelular(correo);
+        System.out.println("Celular mod2");
+        System.out.println(celular);
+        System.out.println("Correo mod2");
+        System.out.println(correo);
+        String sqlUpdate = "UPDATE Estudiantes SET numeroCelular = ? WHERE correo = ?";
+        try (PreparedStatement updateStatement = connection.prepareStatement(sqlUpdate)) {
+            int cel = Integer.parseInt(celular);
+            updateStatement.setInt(1, cel);
+            updateStatement.setString(2, correo);
+            updateStatement.executeUpdate();
+            System.out.println("Modificación exitosa.");
+            return "Modificación exitosa.";
+        } 
+    
     public String subscribirObservador(String user) {
         String obtenerIdEstudianteQuery = "SELECT id FROM Estudiantes WHERE correo = ?";
         String insertarReceptorNotificacionQuery = "INSERT INTO ReceptoresNotificaciones (idReceptor, idNotificacion, idTipoUsuario) VALUES (?, 0, 2)";
@@ -299,5 +314,70 @@ public class EstudianteDAO {
         return notificaciones;
     }
 
-}  
+    }
+ 
+
+    public Estudiante getEstudiante2(String correo) throws SQLException {
+            PreparedStatement statement = null;
+            ResultSet resultSet = null;
+            Estudiante estudianteEncontrado = null;
+            
+            //int carnetNum = 2020087412;
+
+            System.out.println("CORREO");
+            System.out.println(correo);
+            
+            try {
+
+                String query = "SELECT * FROM Estudiantes WHERE correo = ?";
+                statement = connection.prepareStatement(query);
+                statement.setString(1, correo);
+                resultSet = statement.executeQuery();
+                
+                // Verificar si se encontró un estudiante con el código dado
+                if (resultSet.next()) {
+                    // Crear un objeto Estudiante con los datos obtenidos de la consulta
+                    estudianteEncontrado = new Estudiante();
+                    estudianteEncontrado.setCarnet(resultSet.getInt("carne"));
+                    estudianteEncontrado.setNombre(resultSet.getString("nombre"));
+                    estudianteEncontrado.setApellido1(resultSet.getString("apellido1"));
+                    estudianteEncontrado.setApellido2(resultSet.getString("apellido2"));
+                    estudianteEncontrado.setCorreo(resultSet.getString("correo"));
+                    estudianteEncontrado.setContrasena(resultSet.getString("contraseña"));
+                    estudianteEncontrado.setCelular(resultSet.getInt("numeroCelular"));  
+                }
+                
+            } finally {
+                // Cerrar los recursos utilizados
+                if (resultSet != null) {
+                    resultSet.close();
+                }
+                if (statement != null) {
+                    statement.close();
+                }
+            }
+            
+            return estudianteEncontrado;
+        }
+
+        public String mostrarCelular(String correo) throws SQLException {
+        String sql = "SELECT numeroCelular FROM Estudiantes WHERE correo = ?";
+        System.out.println("ya1 Dao");
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, correo);
+            System.out.println("ya2 Dao");
+           try (ResultSet result = statement.executeQuery()) {
+                if (result.next()) {
+                    return String.valueOf(result.getInt("numeroCelular"));
+                } else {
+                    return "Error";
+                }
+        } 
+    
+        }
+    }
+
+}
+
+
 

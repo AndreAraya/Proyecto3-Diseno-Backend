@@ -212,26 +212,18 @@ public class EstudianteDAO {
         }
     }
 
-    public String modificarEstudiante2(Estudiante estudiante) throws SQLException {
-        String sqlCheckEmail = "SELECT carne FROM Estudiantes WHERE correo = ?";
-        String sqlUpdate = "UPDATE Estudiantes SET numeroCelular = ? WHERE carne = ?";
-        
-        try (PreparedStatement checkEmailStatement = connection.prepareStatement(sqlCheckEmail);
-             PreparedStatement updateStatement = connection.prepareStatement(sqlUpdate)) {
-            
-            checkEmailStatement.setString(1, estudiante.getCorreo());
-            log.info("AQUI");
-            log.info(estudiante.getCorreo());
-            ResultSet resultSet = checkEmailStatement.executeQuery();
-            
-            if (resultSet.next()) {
-                    updateStatement.setInt(6, estudiante.getCelular());
-                    updateStatement.executeUpdate();
-                    return "Modificación exitosa.";
+    public String modificarEstudiante2(String correo,String celular ) throws SQLException {
+        String sqlUpdate = "UPDATE Estudiantes SET numeroCelular = ? WHERE correo = ?";
+        try (PreparedStatement updateStatement = connection.prepareStatement(sqlUpdate)) {
+            int cel = Integer.parseInt(celular);
+            updateStatement.setInt(1, cel);
+            updateStatement.setString(2, correo);
+            updateStatement.executeUpdate();
+            return "Modificación exitosa.";
         } 
+    
     }
-    return "Error";
-} 
+ 
 
     public Estudiante getEstudiante2(String correo) throws SQLException {
             PreparedStatement statement = null;
@@ -276,6 +268,24 @@ public class EstudianteDAO {
             return estudianteEncontrado;
         }
 
+        public String mostrarCelular(String correo) throws SQLException {
+        String sql = "SELECT numeroCelular FROM Estudiantes WHERE correo = ?";
+        System.out.println("ya1 Dao");
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, correo);
+            System.out.println("ya2 Dao");
+           try (ResultSet result = statement.executeQuery()) {
+                if (result.next()) {
+                    return String.valueOf(result.getInt("numeroCelular"));
+                } else {
+                    return "Error";
+                }
+        } 
+    
+        }
+    }
 
-}  
+}
+
+
 

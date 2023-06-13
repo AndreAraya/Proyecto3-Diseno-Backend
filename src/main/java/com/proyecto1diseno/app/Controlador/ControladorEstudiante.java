@@ -209,11 +209,11 @@ public class ControladorEstudiante {
             }
         }
 
-        @PostMapping("/datosEstRes2")
+        @PostMapping("/modCelEst")
         public ResponseEntity<String> modificarEstudiante2(@RequestBody Map<String, Object> estudianteData) throws SQLException {
-            Estudiante estudiante = new Estudiante();
-            estudiante.setCelular(Integer.parseInt(estudianteData.get("tel").toString()));
-            String respuestaModificar = estudianteService.modificarEstudiante2(estudiante);
+            String correo = (String) estudianteData.get("user");
+            String celular = (String) estudianteData.get("celular");
+            String respuestaModificar = estudianteService.modificarEstudiante2(correo, celular);
             if (respuestaModificar.startsWith("Error: ")) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(respuestaModificar);
             } else {
@@ -228,5 +228,18 @@ public class ControladorEstudiante {
             Gson gson = new Gson();
             String jsonEstudiante = gson.toJson(estudianteAMostrar);
             return ResponseEntity.ok().body(jsonEstudiante);
+            }
+
+        @PostMapping("/mostCel")
+        public ResponseEntity<String> mostrarCelular(@RequestBody Map<String, Object> requestBody) throws SQLException {
+            String correo = (String) requestBody.get("user");
+            System.out.println("correo");
+            System.out.println(correo);
+            String celular = estudianteService.mostrarCelular(correo);
+            System.out.println("celular");
+            System.out.println(celular);
+            Gson gson = new Gson();
+            String jsonCelular = gson.toJson(celular);
+            return ResponseEntity.ok().body(jsonCelular);
             }
 }

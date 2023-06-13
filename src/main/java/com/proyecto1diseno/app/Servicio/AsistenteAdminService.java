@@ -2,12 +2,16 @@ package com.proyecto1diseno.app.Servicio;
 
 import java.sql.SQLException;
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.proyecto1diseno.app.DAO.AsistenteAdminDAO;
 import com.proyecto1diseno.app.DAO.DBManager;
+import com.proyecto1diseno.app.DAO.EstudianteDAO;
 import com.proyecto1diseno.app.Modelo.Actividad;
 import com.proyecto1diseno.app.Modelo.AsistenteAdmin;
 import com.proyecto1diseno.app.Modelo.EquipoGuia;
@@ -22,68 +26,22 @@ public class AsistenteAdminService {
     PlanTrabajo planTrabajo;
     Collection<Profesor> profesores;
 
-    public boolean registrarNuevoIngreso(Profesor profesor){
-        if(profesor == null){
-            return false;
-        }
-        for (Profesor prof : profesores ){
-            if (prof.getCodigo() == profesor.getCodigo()){
-                return false;
-            }
-        }
-        profesores.add(profesor);
-        return true;
-    }
-    
-    public boolean darDeBaja(Profesor profesor){
-        //Hay que poner algo para señalar a los que están dados de baja porque
-        //no se deben eliminar del todo
-        return true;
-    }
+    private AsistenteAdminDAO asistenteDAO;
 
-    public boolean editarMiembro (Profesor profesor){
-        if(profesor == null){
-            return false;
-        }
-        for (Profesor prof : profesores){
-            if (prof.getCodigo() == profesor.getCodigo()){
-                prof.setCelular(profesor.getCelular());
-                prof.setFotografia(profesor.getFotografia());
-                prof.setNombre(profesor.getNombre());
-                prof.setTelOficina(profesor.getTelOficina());
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public EquipoGuia obtenerDetalleEquipo(){
-        return equipoGuia;
-    }
-
-    public boolean nombrarCoordinador(Profesor profesor){
-        if(profesor == null){
-            return false;
-        }
-        for (Profesor prof : profesores){
-            if (prof.getCodigo() == profesor.getCodigo()){
-                //prof.setCoordinador(true);
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public PlanTrabajo consultarPlanTrabajo(){
-        return planTrabajo;
-    }
-
-    public Actividad verDetalleProxAct(){
-        return actividad;
+    @Autowired
+    public AsistenteAdminService() throws SQLException {
+        asistenteDAO = DBManager.getAsistenteAdminDAO();
     }
 
     public Optional<AsistenteAdmin> validarCredenciales(String correo, String contrasena) throws SQLException {
-        AsistenteAdminDAO asistenteAdminDAO = DBManager.getAsistenteAdminDAO();
-        return asistenteAdminDAO.validarCredenciales(correo, contrasena);
+        return asistenteDAO.validarCredenciales(correo, contrasena);
+    }
+
+    public String subscribirObservador(String user) {
+        return asistenteDAO.subscribirObservador(user);
+    }
+
+    public List<Map<String, Object>> obtenerNotificaciones(String user) {
+        return asistenteDAO.obtenerNotificaciones(user);
     }
 }

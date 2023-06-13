@@ -25,8 +25,11 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.gson.Gson;
 import com.proyecto1diseno.app.Modelo.Estudiante;
+import com.proyecto1diseno.app.Modelo.Notificacion;
+import com.proyecto1diseno.app.Modelo.Observador;
 import com.proyecto1diseno.app.Modelo.Profesor;
 import com.proyecto1diseno.app.Servicio.EstudianteService;
+import com.proyecto1diseno.app.Servicio.NotificacionService;
 import com.proyecto1diseno.app.Servicio.ProfesorService;
 
 import lombok.extern.slf4j.Slf4j;
@@ -34,13 +37,15 @@ import lombok.extern.slf4j.Slf4j;
 @RestController
 @Slf4j
 @RequestMapping("/estudiante")
-public class ControladorEstudiante {
+public class ControladorEstudiante implements Observador {
 
     private final EstudianteService estudianteService;
+    private final NotificacionService notificacionService;
 
     @Autowired
-    public ControladorEstudiante(EstudianteService estudianteService) {
+    public ControladorEstudiante(EstudianteService estudianteService, NotificacionService notificacionService) {
         this.estudianteService = estudianteService;
+        this.notificacionService = notificacionService;
     }
 
     @PostMapping("/gestionarEst")
@@ -207,6 +212,30 @@ public class ControladorEstudiante {
                 List<Map<String, Object>> estudiantes = new ArrayList<Map<String, Object>>();
                     return estudiantes;
             }
+        }
+
+        @PostMapping("/subscribirObservador")
+        public ResponseEntity<String> subscribirObservador(@RequestBody Map<String, Object> requestBody) throws SQLException {
+            String user = (String)  requestBody.get("user");
+            String respuestaSubscripcion = estudianteService.subscribirObservador(user);
+            notificacionService.agregarObservador(this);
+            if (respuestaSubscripcion.startsWith("Error: ")) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(respuestaSubscripcion);
+            } else {
+                return ResponseEntity.ok().body(respuestaSubscripcion);
+            }
+        }
+
+        @PostMapping("/gestionarBuzon")
+        public ResponseEntity<List<Map<String,Object>>> obtenerNotificaciones(@RequestBody Map<String, Object> requestBody) throws SQLException, JsonProcessingException {
+            String user = (String) requestBody.get("user");
+            List<Map<String, Object>> notificaciones = estudianteService.obtenerNotificaciones(user);
+            return ResponseEntity.ok().body(notificaciones);
+        }
+
+        @Override
+        public void notificar(Notificacion notificacion) {
+            throw new UnsupportedOperationException("Unimplemented method 'actualizar'");
         }
 
 }

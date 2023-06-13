@@ -65,6 +65,14 @@ public class ProfesorService {
         return profesorDAO.definirCoordinador(codigoProf, user);
     }
 
+    public String subscribirObservador(String user) {
+        return profesorDAO.subscribirObservador(user);
+    }
+
+    public List<Map<String, Object>> obtenerNotificaciones(String user) {
+        return profesorDAO.obtenerNotificaciones(user);
+    }
+
 
     
 }

@@ -390,8 +390,6 @@ public class ProfesorDAO {
         ResultSet resultSet2 = null;
     
         try {
-            
-               
                 String query2 = "SELECT DISTINCT p.* FROM Profesores p INNER JOIN ProfesoresGuias pg ON p.idProfesor = pg.idProfesor WHERE p.idProfesor = pg.idProfesor";
                 statement2 = connection.prepareStatement(query2);
                 String profesorID = "1";
@@ -479,6 +477,92 @@ public class ProfesorDAO {
             return "No es asistente de Cartago";
         }
 
+    }
+
+    public String subscribirObservador(String user) {
+        String obtenerIdProfesorQuery = "SELECT id FROM Profesores WHERE correo = ?";
+        String insertarReceptorNotificacionQuery = "INSERT INTO ReceptoresNotificaciones (idReceptor, idNotificacion, idTipoUsuario) VALUES (?, 0, 1)";
+
+        try {
+            PreparedStatement obtenerIdProfesorStmt = connection.prepareStatement(obtenerIdProfesorQuery);
+            obtenerIdProfesorStmt.setString(1, user);
+            ResultSet resultado = obtenerIdProfesorStmt.executeQuery();
+            
+            if (resultado.next()) {
+                String idProfesor = resultado.getString("id");
+
+                PreparedStatement insertarReceptorNotificacionStmt = connection.prepareStatement(insertarReceptorNotificacionQuery);
+                insertarReceptorNotificacionStmt.setString(1, idProfesor);
+
+                insertarReceptorNotificacionStmt.executeUpdate();
+                
+                return "Subscripción exitosa.";
+            } else {
+                return "Error: El usuario no es un profesor válido";
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return "Error: Error en la suscripción";
+        }
+    }
+
+    public List<Map<String, Object>> obtenerNotificaciones(String user) {
+        List<Map<String, Object>> notificaciones = new ArrayList<>();
+
+        String obtenerIdProfesorQuery = "SELECT id FROM Profesores WHERE correo = ?";
+        String idProfesor = null;
+
+        try {
+            PreparedStatement obtenerIdProfesorStmt = connection.prepareStatement(obtenerIdProfesorQuery);
+            obtenerIdProfesorStmt.setString(1, user);
+            ResultSet resultado = obtenerIdProfesorStmt.executeQuery();
+
+            if (resultado.next()) {
+                idProfesor = resultado.getString("id");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+
+        if (idProfesor == null) {
+            return notificaciones;
+        }
+
+        // Obtener las notificaciones del profesor con el ID obtenido
+        String obtenerNotificacionesQuery = "SELECT n.emisor, n.fecha, n.contenido, rn.leido FROM Notificaciones n " +
+                "INNER JOIN ReceptoresNotificaciones rn ON n.id = rn.idNotificacion " +
+                "WHERE rn.idReceptor = ? AND rn.idNotificacion <> 0";
+
+        try {
+            // Preparar la consulta para obtener las notificaciones
+            PreparedStatement obtenerNotificacionesStmt = connection.prepareStatement(obtenerNotificacionesQuery);
+            obtenerNotificacionesStmt.setString(1, idProfesor);
+
+            // Ejecutar la consulta para obtener las notificaciones
+            ResultSet resultado = obtenerNotificacionesStmt.executeQuery();
+
+            // Recorrer los resultados y agregarlos al mapa de notificaciones
+            while (resultado.next()) {
+                String emisor = resultado.getString("emisor");
+                String fecha = resultado.getString("fecha");
+                String contenido = resultado.getString("contenido");
+                boolean leida = resultado.getBoolean("leida");
+
+                Map<String, Object> notificacion = new HashMap<>();
+                notificacion.put("emisor", emisor);
+                notificacion.put("fecha", fecha);
+                notificacion.put("contenido", contenido);
+                notificacion.put("leido", leida);
+
+                notificaciones.add(notificacion);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return notificaciones;
+        }
+
+        return notificaciones;
     }
 
 

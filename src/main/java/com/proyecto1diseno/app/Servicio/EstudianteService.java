@@ -49,4 +49,12 @@ public class EstudianteService {
     public Optional<Estudiante> validarCredenciales(String correo, String carne) throws SQLException {
         return estudianteDAO.validarCredenciales(correo, carne);
     }
+
+    public String subscribirObservador(String user) {
+        return estudianteDAO.subscribirObservador(user);
+    }
+
+    public List<Map<String, Object>> obtenerNotificaciones(String user) {
+        return estudianteDAO.obtenerNotificaciones(user);
+    }
 }

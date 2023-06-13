@@ -14,6 +14,9 @@ import java.util.Optional;
 import com.proyecto1diseno.app.Modelo.AsistenteAdmin;
 import com.proyecto1diseno.app.Modelo.Notificacion;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class AsistenteAdminDAO {
     private final Connection connection;
 

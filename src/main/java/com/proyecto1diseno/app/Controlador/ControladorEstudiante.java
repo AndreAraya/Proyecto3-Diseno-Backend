@@ -209,11 +209,15 @@ public class ControladorEstudiante {
             }
         }
 
-        @PostMapping("/modCelEst")
+        @PostMapping("/cambiarNumEst")
         public ResponseEntity<String> modificarEstudiante2(@RequestBody Map<String, Object> estudianteData) throws SQLException {
+            System.out.println("ESTUDIANTE");
+            System.out.println(estudianteData);
             String correo = (String) estudianteData.get("user");
-            String celular = (String) estudianteData.get("celular");
-            String respuestaModificar = estudianteService.modificarEstudiante2(correo, celular);
+            String celular = (String) estudianteData.get("cel");
+            System.out.println("CELULAR");
+            System.out.println(celular);
+            String respuestaModificar = estudianteService.modificarEstudiante2(correo ,celular);
             if (respuestaModificar.startsWith("Error: ")) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(respuestaModificar);
             } else {

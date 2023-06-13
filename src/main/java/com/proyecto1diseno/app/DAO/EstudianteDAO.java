@@ -212,13 +212,19 @@ public class EstudianteDAO {
         }
     }
 
-    public String modificarEstudiante2(String correo,String celular ) throws SQLException {
+    public String modificarEstudiante2(String correo, String celular) throws SQLException {
+        //String celular = mostrarCelular(correo);
+        System.out.println("Celular mod2");
+        System.out.println(celular);
+        System.out.println("Correo mod2");
+        System.out.println(correo);
         String sqlUpdate = "UPDATE Estudiantes SET numeroCelular = ? WHERE correo = ?";
         try (PreparedStatement updateStatement = connection.prepareStatement(sqlUpdate)) {
             int cel = Integer.parseInt(celular);
             updateStatement.setInt(1, cel);
             updateStatement.setString(2, correo);
             updateStatement.executeUpdate();
+            System.out.println("Modificación exitosa.");
             return "Modificación exitosa.";
         } 
     

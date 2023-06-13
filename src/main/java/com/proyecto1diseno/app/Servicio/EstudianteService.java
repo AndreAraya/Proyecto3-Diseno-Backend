@@ -50,8 +50,8 @@ public class EstudianteService {
         return estudianteDAO.validarCredenciales(correo, carne);
     }
 
-    public String modificarEstudiante2(String correo,String celular) throws SQLException {
-        return estudianteDAO.modificarEstudiante2(correo, celular );
+    public String modificarEstudiante2(String correo, String celular) throws SQLException {
+        return estudianteDAO.modificarEstudiante2(correo, celular);
     }
 
     public Estudiante getEstudiante2(String correo) throws SQLException {

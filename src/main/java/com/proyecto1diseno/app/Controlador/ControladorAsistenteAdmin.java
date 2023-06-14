@@ -61,8 +61,8 @@ public class ControladorAsistenteAdmin implements Observador {
         public ResponseEntity<List<Map<String,Object>>> obtenerNotificaciones(@RequestBody Map<String, Object> requestBody) throws SQLException, JsonProcessingException {
             String user = (String) requestBody.get("user");
             List<Map<String, Object>> notificaciones = asistenteAdminService.obtenerNotificaciones(user);
-            if (notificaciones == null || notificaciones.isEmpty()) {
-                log.info("Error: No estas suscrito al sistema de notificaciones.");
+            if (notificaciones.stream().anyMatch(map -> map.containsKey("error"))) {
+                log.info("Error: No estás suscrito al sistema de notificaciones.");
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Collections.emptyList());
             } else {
                 observadorUser = user;
@@ -123,6 +123,18 @@ public class ControladorAsistenteAdmin implements Observador {
         } else {
             notificacionService.agregarObservador(this);
             return ResponseEntity.ok().body(respuestaSubscripcion);
+        }
+    }
+
+    @PostMapping("/marcarNotifLeida")
+    public ResponseEntity<String> marcarNotificacionLeida(@RequestBody Map<String, Object> requestBody) throws SQLException {
+        String user = (String) requestBody.get("user");
+        String codigoNotif = (String) requestBody.get("codigo");
+        String respuestaMarcar = asistenteAdminService.marcarNotificacionLeida(user, codigoNotif);
+        if (respuestaMarcar.startsWith("Error: ")) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(respuestaMarcar);
+        } else {
+            return ResponseEntity.ok().body(respuestaMarcar);
         }
     }
 

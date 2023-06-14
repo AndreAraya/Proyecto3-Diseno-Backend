@@ -94,6 +94,14 @@ public class ProfesorService {
         return profesorDAO.desuscribirObservador(user);
     }
 
+    public String marcarNotificacionLeida(String user, String codigoNotif) {
+        return profesorDAO.marcarNotificacionLeida(user, codigoNotif);
+    }
+
+    public String marcarNotificacionNoLeida(String user, String codigoNotif) {
+        return profesorDAO.marcarNotificacionNoLeida(user, codigoNotif);
+    }
+
 
     
 }

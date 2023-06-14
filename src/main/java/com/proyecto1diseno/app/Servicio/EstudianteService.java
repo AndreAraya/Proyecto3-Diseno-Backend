@@ -96,4 +96,8 @@ public class EstudianteService {
     public String desubscribirObservador(String user) {
         return estudianteDAO.desuscribirObservador(user);
     }
+
+    public String marcarNotificacionLeida(String user, String codigoNotif) {
+        return estudianteDAO.marcarNotificacionLeida(user, codigoNotif);
+    }
 }

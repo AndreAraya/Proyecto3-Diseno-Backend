@@ -65,4 +65,8 @@ public class AsistenteAdminService {
     public String desubscribirObservador(String user) {
         return asistenteDAO.desuscribirObservador(user);
     }
+
+    public String marcarNotificacionLeida(String user, String codigoNotif) {
+        return asistenteDAO.marcarNotificacionLeida(user, codigoNotif);
+    }
 }

@@ -74,7 +74,7 @@ public class AsistenteAdminDAO {
     public List<Map<String, Object>> obtenerNotificaciones(String user) {
         List<Map<String, Object>> notificaciones = new ArrayList<>();
 
-        String obtenerIdAsistenteQuery = "SELECT id FROM Asistentes WHERE correo = ?";
+        String obtenerIdAsistenteQuery = "SELECT idAsistente FROM Asistentes WHERE correo = ?";
         String idAsistente = null;
 
         try {
@@ -83,7 +83,7 @@ public class AsistenteAdminDAO {
             ResultSet resultado = obtenerIdAsistenteStmt.executeQuery();
 
             if (resultado.next()) {
-                idAsistente = resultado.getString("id");
+                idAsistente = resultado.getString("idAsistente");
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -113,7 +113,7 @@ public class AsistenteAdminDAO {
         }
 
         // Obtener las notificaciones del asistente con el ID obtenido
-        String obtenerNotificacionesQuery = "SELECT n.idNotificacion, n.emisor, n.idTipoUsuario, n.fecha, n.contenido, rn.leido FROM Notificaciones n " +
+        String obtenerNotificacionesQuery = "SELECT n.idNotificacion, n.idEmisor, n.idTipoUsuario, n.fecha, n.contenido, rn.leida FROM Notificaciones n " +
             "INNER JOIN ReceptoresNotificaciones rn ON n.idNotificacion = rn.idNotificacion " +
             "WHERE rn.idReceptor = ? AND rn.idNotificacion <> 0";
 
@@ -128,7 +128,7 @@ public class AsistenteAdminDAO {
             // Recorrer los resultados y agregarlos al mapa de notificaciones
             while (resultado.next()) {
                 int idNotificacion = resultado.getInt("idNotificacion");
-                int emisor = resultado.getInt("emisor");
+                int emisor = resultado.getInt("idEmisor");
                 int usuario = resultado.getInt("idTipoUsuario");
                 String fecha = resultado.getString("fecha");
                 String contenido = resultado.getString("contenido");
@@ -137,10 +137,10 @@ public class AsistenteAdminDAO {
                 String nombreEmisor = obtenerUsuarioEmisor(usuario, emisor);
 
                 Map<String, Object> notificacion = new HashMap<>();
-                notificacion.put("idNotificacion", idNotificacion);
+                notificacion.put("id", idNotificacion);
                 notificacion.put("emisor", nombreEmisor);
                 notificacion.put("fecha", fecha);
-                notificacion.put("texto", contenido);
+                notificacion.put("mensaje", contenido);
                 notificacion.put("leido", leida);
 
                 notificaciones.add(notificacion);
@@ -310,7 +310,7 @@ public class AsistenteAdminDAO {
             }
             
             // Eliminar registros de la tabla basado en el ID del asistente y la notificación
-            query = "DELETE FROM ReceptoresNotificaciones WHERE idAsistente = ? AND idNotificacion = ?";
+            query = "DELETE FROM ReceptoresNotificaciones WHERE idReceptor = ? AND idNotificacion = ?";
             stmt = connection.prepareStatement(query);
             stmt.setInt(1, idAsistente);
             stmt.setInt(2, (int) idNotificacion);
@@ -339,7 +339,7 @@ public class AsistenteAdminDAO {
             }
             
             // Eliminar registros de la tabla ReceptoresNotificaciones basados en el ID del asistente
-            query = "DELETE FROM ReceptoresNotificaciones WHERE idReceptor = ?";
+            query = "DELETE FROM ReceptoresNotificaciones WHERE idReceptor = ? AND idNotificacion <> 0";
             stmt = connection.prepareStatement(query);
             stmt.setString(1, idAsistente);
             int rowsAffected = stmt.executeUpdate();
@@ -377,6 +377,73 @@ public class AsistenteAdminDAO {
         } catch (SQLException e) {
             e.printStackTrace();
             return "Error: Ocurrió un error al eliminar las notificaciones.";
+        }
+    }
+
+    public String marcarNotificacionLeida(String user, String codigoNotif) {
+        try {
+            String idAsistente = null;
+            
+            // Buscar el ID del asistente basado en el correo del usuario
+            String query = "SELECT idAsistente FROM Asistentes WHERE correo = ?";
+            PreparedStatement stmt = connection.prepareStatement(query);
+            stmt.setString(1, user);
+            ResultSet rs = stmt.executeQuery();
+            
+            if (rs.next()) {
+                idAsistente = rs.getString("idAsistente");
+            } else {
+                return "Error: No se encontró ningún asistente con ese correo.";
+            }
+            
+            // Actualizar el campo "leida" a 1 en la tabla ReceptoresNotificaciones
+            query = "UPDATE ReceptoresNotificaciones SET leida = 1 WHERE idReceptor = ? AND idNotificacion = ?";
+            stmt = connection.prepareStatement(query);
+            stmt.setString(1, idAsistente);
+            stmt.setString(2, codigoNotif);
+            int rowsAffected = stmt.executeUpdate();
+            
+            if (rowsAffected > 0) {
+                return "Notificación marcada como leída.";
+            } else {
+                return "No se encontró ninguna notificación con ese código.";
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return "Error: Ocurrió un error al marcar la notificación como leída.";
+        }
+    }
+
+    public String marcarNotificacionNoLeida(String user, String codigoNotif) {
+        try {
+            String idAsistente = null;
+            
+            // Buscar el ID del asistente basado en el correo del usuario
+            String query = "SELECT idAsistente FROM Asistentes WHERE correo = ?";
+            PreparedStatement stmt = connection.prepareStatement(query);
+            stmt.setString(1, user);
+            ResultSet rs = stmt.executeQuery();
+            
+            if (rs.next()) {
+                idAsistente = rs.getString("idAsistente");
+            } else {
+                return "Error: No se encontró ningún asistente con ese correo.";
+            }
+            
+            query = "UPDATE ReceptoresNotificaciones SET leida = 0 WHERE idReceptor = ? AND idNotificacion = ?";
+            stmt = connection.prepareStatement(query);
+            stmt.setString(1, idAsistente);
+            stmt.setString(2, codigoNotif);
+            int rowsAffected = stmt.executeUpdate();
+            
+            if (rowsAffected > 0) {
+                return "Notificación marcada como leída.";
+            } else {
+                return "No se encontró ninguna notificación con ese código.";
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return "Error: Ocurrió un error al marcar la notificación como no leída.";
         }
     }
 }

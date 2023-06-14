@@ -154,8 +154,8 @@ public class ControladorProfesor implements Observador {
     public ResponseEntity<List<Map<String,Object>>> obtenerNotificaciones(@RequestBody Map<String, Object> requestBody) throws SQLException, JsonProcessingException {
         String user = (String) requestBody.get("user");
         List<Map<String, Object>> notificaciones = profesorService.obtenerNotificaciones(user);
-        if (notificaciones == null || notificaciones.isEmpty()) {
-            log.info("Error: No estas suscrito al sistema de notificaciones.");
+        if (notificaciones.stream().anyMatch(map -> map.containsKey("error"))) {
+            log.info("Error: No estás suscrito al sistema de notificaciones.");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Collections.emptyList());
         } else {
             observadorUser = user;
@@ -208,6 +208,17 @@ public class ControladorProfesor implements Observador {
         }
     }
 
+    @PostMapping("/desubscribirObservador")
+    public ResponseEntity<String> desubscribirObservador(@RequestBody Map<String, Object> requestBody) throws SQLException {
+        String user = (String)  requestBody.get("user");
+        String respuestaSubscripcion = profesorService.desubscribirObservador(user);
+        if (respuestaSubscripcion.startsWith("Error: ")) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(respuestaSubscripcion);
+        } else {
+            notificacionService.agregarObservador(this);
+            return ResponseEntity.ok().body(respuestaSubscripcion);
+        }
+    }
 
     @Override
     public void notificar(Notificacion notificacion) {

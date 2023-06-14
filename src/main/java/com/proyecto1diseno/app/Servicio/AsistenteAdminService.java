@@ -61,4 +61,8 @@ public class AsistenteAdminService {
     public String eliminarNotificaciones(String user) {
         return asistenteDAO.eliminarNotificaciones(user);
     }
+
+    public String desubscribirObservador(String user) {
+        return asistenteDAO.desuscribirObservador(user);
+    }
 }

@@ -90,6 +90,10 @@ public class ProfesorService {
         return profesorDAO.eliminarNotificaciones(user);
     }
 
+    public String desubscribirObservador(String user) {
+        return profesorDAO.desuscribirObservador(user);
+    }
+
 
     
 }

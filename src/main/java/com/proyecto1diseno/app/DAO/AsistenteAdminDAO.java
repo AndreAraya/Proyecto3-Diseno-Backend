@@ -74,7 +74,7 @@ public class AsistenteAdminDAO {
     public List<Map<String, Object>> obtenerNotificaciones(String user) {
         List<Map<String, Object>> notificaciones = new ArrayList<>();
 
-        String obtenerIdAsistenteQuery = "SELECT id FROM Profesores WHERE correo = ?";
+        String obtenerIdAsistenteQuery = "SELECT id FROM Asistentes WHERE correo = ?";
         String idAsistente = null;
 
         try {
@@ -90,14 +90,32 @@ public class AsistenteAdminDAO {
             return null;
         }
 
-        if (idAsistente == null) {
+        // Comprobar si el asistente está suscrito
+        String comprobarSuscritoQuery = "SELECT idReceptor FROM ReceptoresNotificaciones WHERE idReceptor = ? AND idNotificacion = 0";
+
+        try {
+            PreparedStatement comprobarSuscritoStmt = connection.prepareStatement(comprobarSuscritoQuery);
+            comprobarSuscritoStmt.setString(1, idAsistente);
+            ResultSet suscripcionResult = comprobarSuscritoStmt.executeQuery();
+
+            boolean suscrito = suscripcionResult.next();
+
+            if (!suscrito) {
+                // El asistente no está suscrito, agregar el mensaje de error
+                Map<String, Object> error = new HashMap<>();
+                error.put("error", "No está suscrito");
+                notificaciones.add(error);
+                return notificaciones;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
             return notificaciones;
         }
 
         // Obtener las notificaciones del asistente con el ID obtenido
-        String obtenerNotificacionesQuery = "SELECT n.emisor, n.fecha, n.contenido, rn.leido FROM Notificaciones n " +
-                "INNER JOIN ReceptoresNotificaciones rn ON n.id = rn.idNotificacion " +
-                "WHERE rn.idReceptor = ? AND rn.idNotificacion <> 0";
+        String obtenerNotificacionesQuery = "SELECT n.idNotificacion, n.emisor, n.idTipoUsuario, n.fecha, n.contenido, rn.leido FROM Notificaciones n " +
+            "INNER JOIN ReceptoresNotificaciones rn ON n.idNotificacion = rn.idNotificacion " +
+            "WHERE rn.idReceptor = ? AND rn.idNotificacion <> 0";
 
         try {
             // Preparar la consulta para obtener las notificaciones
@@ -109,6 +127,7 @@ public class AsistenteAdminDAO {
 
             // Recorrer los resultados y agregarlos al mapa de notificaciones
             while (resultado.next()) {
+                int idNotificacion = resultado.getInt("idNotificacion");
                 int emisor = resultado.getInt("emisor");
                 int usuario = resultado.getInt("idTipoUsuario");
                 String fecha = resultado.getString("fecha");
@@ -118,9 +137,10 @@ public class AsistenteAdminDAO {
                 String nombreEmisor = obtenerUsuarioEmisor(usuario, emisor);
 
                 Map<String, Object> notificacion = new HashMap<>();
+                notificacion.put("idNotificacion", idNotificacion);
                 notificacion.put("emisor", nombreEmisor);
                 notificacion.put("fecha", fecha);
-                notificacion.put("contenido", contenido);
+                notificacion.put("texto", contenido);
                 notificacion.put("leido", leida);
 
                 notificaciones.add(notificacion);
@@ -201,7 +221,7 @@ public class AsistenteAdminDAO {
         String idNotificacion = null;
 
         // Buscar el ID del asistente en la tabla Asistentes
-        String buscarIdAsistenteQuery = "SELECT idAsistente FROM Asistentes WHERE correo = ?";
+        String buscarIdAsistenteQuery = "SELECT idAsistente FROM Asistentes WHERE correo = ? AND idNotificacion <> 0";
         try {
             PreparedStatement buscarIdAsistenteStmt = connection.prepareStatement(buscarIdAsistenteQuery);
             buscarIdAsistenteStmt.setString(1, user);
@@ -316,6 +336,35 @@ public class AsistenteAdminDAO {
                 idAsistente = rs.getString("idAsistente");
             } else {
                 return "Error: No se encontró ningún asistente";
+            }
+            
+            // Eliminar registros de la tabla ReceptoresNotificaciones basados en el ID del asistente
+            query = "DELETE FROM ReceptoresNotificaciones WHERE idReceptor = ?";
+            stmt = connection.prepareStatement(query);
+            stmt.setString(1, idAsistente);
+            int rowsAffected = stmt.executeUpdate();
+            
+            return "Se eliminaron " + rowsAffected + " notificaciones.";
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return "Error: Ocurrió un error al eliminar las notificaciones.";
+        }
+    }
+
+    public String desuscribirObservador(String user) {
+        try {
+            String idAsistente = null;
+            
+            // Buscar el ID del asistente basado en el correo del usuario
+            String query = "SELECT idAsistente FROM Asistentes WHERE correo = ?";
+            PreparedStatement stmt = connection.prepareStatement(query);
+            stmt.setString(1, user);
+            ResultSet rs = stmt.executeQuery();
+            
+            if (rs.next()) {
+                idAsistente = rs.getString("idAsistente");
+            } else {
+                return "Error: No se encontró ningún asistente con ese correo.";
             }
             
             // Eliminar registros de la tabla ReceptoresNotificaciones basados en el ID del asistente

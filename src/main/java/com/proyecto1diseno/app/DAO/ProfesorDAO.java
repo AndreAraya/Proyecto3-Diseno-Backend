@@ -491,7 +491,7 @@ public class ProfesorDAO {
             ResultSet resultado = obtenerIdProfesorStmt.executeQuery();
             
             if (resultado.next()) {
-                String idProfesor = resultado.getString("id");
+                String idProfesor = resultado.getString("idReceptor");
 
                 PreparedStatement insertarReceptorNotificacionStmt = connection.prepareStatement(insertarReceptorNotificacionQuery);
                 insertarReceptorNotificacionStmt.setString(1, idProfesor);
@@ -527,13 +527,31 @@ public class ProfesorDAO {
             return null;
         }
 
-        if (idProfesor == null) {
+        // Comprobar si el profesor está suscrito
+        String comprobarSuscritoQuery = "SELECT idReceptor FROM ReceptoresNotificaciones WHERE idReceptor = ? AND idNotificacion = 0";
+
+        try {
+            PreparedStatement comprobarSuscritoStmt = connection.prepareStatement(comprobarSuscritoQuery);
+            comprobarSuscritoStmt.setString(1, idProfesor);
+            ResultSet suscripcionResult = comprobarSuscritoStmt.executeQuery();
+
+            boolean suscrito = suscripcionResult.next();
+
+            if (!suscrito) {
+                // El profesor no está suscrito, agregar el mensaje de error
+                Map<String, Object> error = new HashMap<>();
+                error.put("error", "No está suscrito");
+                notificaciones.add(error);
+                return notificaciones;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
             return notificaciones;
         }
 
         // Obtener las notificaciones del profesor con el ID obtenido
         String obtenerNotificacionesQuery = "SELECT n.idNotificacion, n.emisor, n.idTipoUsuario, n.fecha, n.contenido, rn.leido FROM Notificaciones n " +
-            "INNER JOIN ReceptoresNotificaciones rn ON n.id = rn.idNotificacion " +
+            "INNER JOIN ReceptoresNotificaciones rn ON n.idNotificacion = rn.idNotificacion " +
             "WHERE rn.idReceptor = ? AND rn.idNotificacion <> 0";
 
         try {
@@ -747,6 +765,35 @@ public class ProfesorDAO {
             String idProfesor = null;
             
             // Buscar el ID del profesor basado en el correo del usuario
+            String query = "SELECT idProfesor FROM Profesores WHERE correo = ? AND idNotificacion <> 0";
+            PreparedStatement stmt = connection.prepareStatement(query);
+            stmt.setString(1, user);
+            ResultSet rs = stmt.executeQuery();
+            
+            if (rs.next()) {
+                idProfesor = rs.getString("idProfesor");
+            } else {
+                return "Error: No se encontró ningún profesor con ese correo.";
+            }
+            
+            // Eliminar registros de la tabla ReceptoresNotificaciones basados en el ID del profesor
+            query = "DELETE FROM ReceptoresNotificaciones WHERE idReceptor = ?";
+            stmt = connection.prepareStatement(query);
+            stmt.setString(1, idProfesor);
+            int rowsAffected = stmt.executeUpdate();
+            
+            return "Se eliminaron " + rowsAffected + " notificaciones.";
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return "Error: Ocurrió un error al eliminar las notificaciones.";
+        }
+    }
+
+    public String desuscribirObservador(String user) {
+        try {
+            String idProfesor = null;
+            
+            // Buscar el ID del profesor basado en el correo del usuario
             String query = "SELECT idProfesor FROM Profesores WHERE correo = ?";
             PreparedStatement stmt = connection.prepareStatement(query);
             stmt.setString(1, user);
@@ -769,7 +816,7 @@ public class ProfesorDAO {
             e.printStackTrace();
             return "Error: Ocurrió un error al eliminar las notificaciones.";
         }
-}
+    }
 
 
 

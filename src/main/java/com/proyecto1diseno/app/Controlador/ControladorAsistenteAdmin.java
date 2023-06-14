@@ -114,6 +114,20 @@ public class ControladorAsistenteAdmin implements Observador {
             }
         }
 
+    @PostMapping("/desubscribirObservador")
+    public ResponseEntity<String> desubscribirObservador(@RequestBody Map<String, Object> requestBody) throws SQLException {
+        String user = (String)  requestBody.get("user");
+        String respuestaSubscripcion = asistenteAdminService.desubscribirObservador(user);
+        if (respuestaSubscripcion.startsWith("Error: ")) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(respuestaSubscripcion);
+        } else {
+            notificacionService.agregarObservador(this);
+            return ResponseEntity.ok().body(respuestaSubscripcion);
+        }
+    }
+
+    
+
     @Override
     public void notificar(Notificacion notificacion) {
         asistenteAdminService.notificar(observadorUser, notificacion);

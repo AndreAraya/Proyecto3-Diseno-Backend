@@ -92,4 +92,8 @@ public class EstudianteService {
     public String eliminarNotificaciones(String user) {
        return estudianteDAO.eliminarNotificaciones(user);
     }
+
+    public String desubscribirObservador(String user) {
+        return estudianteDAO.desuscribirObservador(user);
+    }
 }

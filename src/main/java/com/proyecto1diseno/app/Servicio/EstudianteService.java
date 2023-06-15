@@ -100,4 +100,8 @@ public class EstudianteService {
     public String marcarNotificacionLeida(String user, String codigoNotif) {
         return estudianteDAO.marcarNotificacionLeida(user, codigoNotif);
     }
+
+    public String marcarNotificacionNoLeida(String user, String codigoNotif) {
+        return estudianteDAO.marcarNotificacionNoLeida(user, codigoNotif);
+    }
 }

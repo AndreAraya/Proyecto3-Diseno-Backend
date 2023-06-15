@@ -45,8 +45,9 @@ public class AsistenteAdminDAO {
     }
 
     public String subscribirObservador(String user) {
-        String obtenerIdAsistenteQuery = "SELECT id FROM Asistentes WHERE correo = ?";
-        String insertarReceptorNotificacionQuery = "INSERT INTO ReceptoresNotificaciones (idReceptor, idNotificacion, idTipoUsuario) VALUES (?, 0, 3)";
+        String obtenerIdAsistenteQuery = "SELECT idAsistente FROM Asistentes WHERE correo = ?";
+        String insertarReceptorNotificacionQuery = "INSERT INTO ReceptoresNotificaciones (idReceptor, idNotificacion, idTipoUsuario, leida, eliminada) VALUES (?, 0, 3, 0, 0)";
+        String comprobarSuscritoQuery = "SELECT idReceptor FROM ReceptoresNotificaciones WHERE idReceptor = ? AND idNotificacion = 0";
 
         try {
             PreparedStatement obtenerIdAsistenteStmt = connection.prepareStatement(obtenerIdAsistenteQuery);
@@ -54,7 +55,17 @@ public class AsistenteAdminDAO {
             ResultSet resultado = obtenerIdAsistenteStmt.executeQuery();
             
             if (resultado.next()) {
-                String idAsistente = resultado.getString("id");
+                String idAsistente = resultado.getString("idAsistente");
+
+                PreparedStatement comprobarSuscritoStmt = connection.prepareStatement(comprobarSuscritoQuery);
+                comprobarSuscritoStmt.setString(1, idAsistente);
+                ResultSet suscripcionResult = comprobarSuscritoStmt.executeQuery();
+
+                boolean suscrito = suscripcionResult.next();
+
+                if (suscrito) {
+                    return "Error: Ya estas suscrito al sistema de notificaciones.";
+                }
 
                 PreparedStatement insertarReceptorNotificacionStmt = connection.prepareStatement(insertarReceptorNotificacionQuery);
                 insertarReceptorNotificacionStmt.setString(1, idAsistente);
@@ -354,26 +365,36 @@ public class AsistenteAdminDAO {
     public String desuscribirObservador(String user) {
         try {
             String idAsistente = null;
-            
+
             // Buscar el ID del asistente basado en el correo del usuario
             String query = "SELECT idAsistente FROM Asistentes WHERE correo = ?";
             PreparedStatement stmt = connection.prepareStatement(query);
             stmt.setString(1, user);
             ResultSet rs = stmt.executeQuery();
-            
+
             if (rs.next()) {
                 idAsistente = rs.getString("idAsistente");
             } else {
                 return "Error: No se encontró ningún asistente con ese correo.";
             }
-            
+
+            // Verificar si el asistente está suscrito en el sistema de notificaciones
+            query = "SELECT * FROM ReceptoresNotificaciones WHERE idReceptor = ?";
+            stmt = connection.prepareStatement(query);
+            stmt.setString(1, idAsistente);
+            rs = stmt.executeQuery();
+
+            if (!rs.next()) {
+                return "Error: No estás suscrito en el sistema de notificaciones.";
+            }
+
             // Eliminar registros de la tabla ReceptoresNotificaciones basados en el ID del asistente
             query = "DELETE FROM ReceptoresNotificaciones WHERE idReceptor = ?";
             stmt = connection.prepareStatement(query);
             stmt.setString(1, idAsistente);
-            int rowsAffected = stmt.executeUpdate();
-            
-            return "Se eliminaron " + rowsAffected + " notificaciones.";
+            stmt.executeUpdate();
+
+            return "Se canceló la suscripción.";
         } catch (SQLException e) {
             e.printStackTrace();
             return "Error: Ocurrió un error al eliminar las notificaciones.";

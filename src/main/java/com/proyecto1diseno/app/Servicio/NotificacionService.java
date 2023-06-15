@@ -6,7 +6,10 @@ import org.springframework.stereotype.Service;
 import com.proyecto1diseno.app.Modelo.Notificacion;
 import com.proyecto1diseno.app.Modelo.Observador;
 
+import lombok.extern.slf4j.Slf4j;
+
 @Service
+@Slf4j
 public class NotificacionService {
     private List<Observador> observadores;
 
@@ -23,7 +26,10 @@ public class NotificacionService {
     }
 
     public void notificar(Notificacion notificacion) {
+        log.info("Ha entrado a notificar va a entrar a ciclo");
+        log.info(observadores.toString());
         for (Observador observador : observadores) { 
+            log.info("Notificando");
             observador.notificar(notificacion);
         }
     }

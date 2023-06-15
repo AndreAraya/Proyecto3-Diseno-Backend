@@ -43,6 +43,8 @@ public class ControladorAsistenteAdmin implements Observador {
         this.notificacionService = notificacionService;
     }
 
+    String observadorUser = null;
+
     @PostMapping("/subscribirObservador")
     public ResponseEntity<String> subscribirObservador(@RequestBody Map<String, Object> requestBody) throws SQLException {
         String user = (String)  requestBody.get("user");
@@ -50,12 +52,11 @@ public class ControladorAsistenteAdmin implements Observador {
         if (respuestaSubscripcion.startsWith("Error: ")) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(respuestaSubscripcion);
         } else {
+            observadorUser = user;
             notificacionService.agregarObservador(this);
             return ResponseEntity.ok().body(respuestaSubscripcion);
         }
     }
-
-    String observadorUser = null;
 
     @PostMapping("/gestionarBuzon")
         public ResponseEntity<List<Map<String,Object>>> obtenerNotificaciones(@RequestBody Map<String, Object> requestBody) throws SQLException, JsonProcessingException {
@@ -65,7 +66,6 @@ public class ControladorAsistenteAdmin implements Observador {
                 log.info("Error: No estás suscrito al sistema de notificaciones.");
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Collections.emptyList());
             } else {
-                observadorUser = user;
                 return ResponseEntity.ok().body(notificaciones);
             }
         }
@@ -74,7 +74,7 @@ public class ControladorAsistenteAdmin implements Observador {
     public ResponseEntity<String> agregarNotificacion(@RequestBody Map<String, Object> requestBody) throws SQLException {
         String user = (String) requestBody.get("user");
         Notificacion notificacion = new Notificacion();
-        notificacion.setContenido((String) requestBody.get("correo"));
+        notificacion.setContenido((String) requestBody.get("contenido"));
         notificacion.setFechaHora(LocalDateTime.now());
         notificacion.setLeida(false);
         String respuesta = asistenteAdminService.agregarNotificacion(notificacion, user);
@@ -94,7 +94,7 @@ public class ControladorAsistenteAdmin implements Observador {
     @PostMapping("/delNotif")
     public ResponseEntity<String> eliminarNotificacion(@RequestBody Map<String, Object> requestBody) throws SQLException {
         String user = (String) requestBody.get("user");
-        int idNotificacion = (int) requestBody.get("idNotif");
+        int idNotificacion = Integer.parseInt(requestBody.get("codigo").toString());
         String respuesta = asistenteAdminService.eliminarNotificacion(idNotificacion, user);
         if (respuesta.startsWith("Error: ")) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(respuesta);
@@ -121,7 +121,7 @@ public class ControladorAsistenteAdmin implements Observador {
         if (respuestaSubscripcion.startsWith("Error: ")) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(respuestaSubscripcion);
         } else {
-            notificacionService.agregarObservador(this);
+            notificacionService.removerObservador(this);
             return ResponseEntity.ok().body(respuestaSubscripcion);
         }
     }
@@ -131,6 +131,18 @@ public class ControladorAsistenteAdmin implements Observador {
         String user = (String) requestBody.get("user");
         String codigoNotif = (String) requestBody.get("codigo");
         String respuestaMarcar = asistenteAdminService.marcarNotificacionLeida(user, codigoNotif);
+        if (respuestaMarcar.startsWith("Error: ")) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(respuestaMarcar);
+        } else {
+            return ResponseEntity.ok().body(respuestaMarcar);
+        }
+    }
+
+    @PostMapping("/marcarNotifNoLeida")
+    public ResponseEntity<String> marcarNotificacionNoLeida(@RequestBody Map<String, Object> requestBody) throws SQLException {
+        String user = (String) requestBody.get("user");
+        String codigoNotif = (String) requestBody.get("codigo");
+        String respuestaMarcar = asistenteAdminService.marcarNotificacionNoLeida(user, codigoNotif);
         if (respuestaMarcar.startsWith("Error: ")) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(respuestaMarcar);
         } else {

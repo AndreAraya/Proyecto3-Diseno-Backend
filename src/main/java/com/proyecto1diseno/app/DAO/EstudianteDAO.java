@@ -232,8 +232,9 @@ public class EstudianteDAO {
     }
 
     public String subscribirObservador(String user) {
-        String obtenerIdEstudianteQuery = "SELECT id FROM Estudiantes WHERE correo = ?";
-        String insertarReceptorNotificacionQuery = "INSERT INTO ReceptoresNotificaciones (idReceptor, idNotificacion, idTipoUsuario) VALUES (?, 0, 2)";
+        String obtenerIdEstudianteQuery = "SELECT idEstudiante FROM Estudiantes WHERE correo = ?";
+        String insertarReceptorNotificacionQuery = "INSERT INTO ReceptoresNotificaciones (idReceptor, idNotificacion, idTipoUsuario, leida, eliminada) VALUES (?, 0, 2, 0, 0)";
+        String comprobarSuscritoQuery = "SELECT idReceptor FROM ReceptoresNotificaciones WHERE idReceptor = ? AND idNotificacion = 0";
 
         try {
             PreparedStatement obtenerIdEstudianteStmt = connection.prepareStatement(obtenerIdEstudianteQuery);
@@ -241,7 +242,17 @@ public class EstudianteDAO {
             ResultSet resultado = obtenerIdEstudianteStmt.executeQuery();
             
             if (resultado.next()) {
-                String idEstudiante = resultado.getString("id");
+                String idEstudiante = resultado.getString("idEstudiante");
+
+                PreparedStatement comprobarSuscritoStmt = connection.prepareStatement(comprobarSuscritoQuery);
+                comprobarSuscritoStmt.setString(1, idEstudiante);
+                ResultSet suscripcionResult = comprobarSuscritoStmt.executeQuery();
+
+                boolean suscrito = suscripcionResult.next();
+
+                if (suscrito) {
+                    return "Error: Ya estas suscrito al sistema de notificaciones.";
+                }
 
                 PreparedStatement insertarReceptorNotificacionStmt = connection.prepareStatement(insertarReceptorNotificacionQuery);
                 insertarReceptorNotificacionStmt.setString(1, idEstudiante);
@@ -482,17 +493,16 @@ public class EstudianteDAO {
 
                 // Insertar un registro en la tabla Notificaciones
                 String insertarNotificacionQuery = "INSERT INTO Notificaciones (idEmisor, fecha, contenido, idTipoUsuario) " +
-                        "VALUES (?, ?, ?, 2)";
+                        "VALUES (?, ?, ?, 2); SELECT SCOPE_IDENTITY() AS idGenerada;";
                 try {
                     PreparedStatement insertarNotificacionStmt = connection.prepareStatement(insertarNotificacionQuery);
                     insertarNotificacionStmt.setString(1, idEstudiante);
                     insertarNotificacionStmt.setTimestamp(2, Timestamp.valueOf(notificacion.getFechaHora()));
                     insertarNotificacionStmt.setString(3, notificacion.getContenido());
-                    insertarNotificacionStmt.executeUpdate();
+                    ResultSet generatedKeys = insertarNotificacionStmt.executeQuery();
 
-                    ResultSet generatedKeys = insertarNotificacionStmt.getGeneratedKeys();
                     if (generatedKeys.next()) {
-                        idNotificacion = generatedKeys.getString(1);
+                        idNotificacion = generatedKeys.getString("idGenerada");
                     } else {
                         // Si no se obtiene el ID, se muestra un mensaje de error
                         return "Error: No se pudo obtener el ID de la notificación agregada";
@@ -508,6 +518,7 @@ public class EstudianteDAO {
         }
         return idEstudiante + " " + idNotificacion;
     }
+
 
     public void notificar(String observadorUser, Notificacion notificacion) {
         String buscarIdEstudianteQuery = "SELECT idEstudiante FROM Estudiantes WHERE correo = ?";
@@ -528,6 +539,7 @@ public class EstudianteDAO {
                     insertarReceptorStmt.setInt(1, idEstudiante);
                     insertarReceptorStmt.setInt(2, notificacion.getIdNotificacion());
                     insertarReceptorStmt.executeUpdate();
+                    log.info("Notificado");
                 } catch (SQLException e) {
                     e.printStackTrace();
                     log.info("Fallo en la inserción en la tabla ReceptoresNotificaciones");
@@ -558,7 +570,7 @@ public class EstudianteDAO {
             }
             
             // Eliminar registros de la tabla basado en el ID del estudiante y la notificación
-            query = "DELETE FROM ReceptoresNotificaciones WHERE idEstudiante = ? AND idNotificacion = ?";
+            query = "DELETE FROM ReceptoresNotificaciones WHERE idReceptor = ? AND idNotificacion = ?";
             stmt = connection.prepareStatement(query);
             stmt.setInt(1, idEstudiante);
             stmt.setInt(2, (int) idNotificacion);
@@ -603,26 +615,36 @@ public class EstudianteDAO {
     public String desuscribirObservador(String user) {
         try {
             String idEstudiante = null;
-            
+
             // Buscar el ID del estudiante basado en el correo del usuario
             String query = "SELECT idEstudiante FROM Estudiantes WHERE correo = ?";
             PreparedStatement stmt = connection.prepareStatement(query);
             stmt.setString(1, user);
             ResultSet rs = stmt.executeQuery();
-            
+
             if (rs.next()) {
                 idEstudiante = rs.getString("idEstudiante");
             } else {
                 return "Error: No se encontró ningún estudiante con ese correo.";
             }
-            
+
+            // Verificar si el estudiante está suscrito en el sistema de notificaciones
+            query = "SELECT * FROM ReceptoresNotificaciones WHERE idReceptor = ?";
+            stmt = connection.prepareStatement(query);
+            stmt.setString(1, idEstudiante);
+            rs = stmt.executeQuery();
+
+            if (!rs.next()) {
+                return "Error: No estás suscrito en el sistema de notificaciones.";
+            }
+
             // Eliminar registros de la tabla ReceptoresNotificaciones basados en el ID del estudiante
             query = "DELETE FROM ReceptoresNotificaciones WHERE idReceptor = ?";
             stmt = connection.prepareStatement(query);
             stmt.setString(1, idEstudiante);
-            int rowsAffected = stmt.executeUpdate();
-            
-            return "Se eliminaron " + rowsAffected + " notificaciones.";
+            stmt.executeUpdate();
+
+            return "Se canceló la suscripción.";
         } catch (SQLException e) {
             e.printStackTrace();
             return "Error: Ocurrió un error al eliminar las notificaciones.";

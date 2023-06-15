@@ -168,7 +168,7 @@ public class ControladorProfesor implements Observador {
     public ResponseEntity<String> agregarNotificacion(@RequestBody Map<String, Object> requestBody) throws SQLException {
         String user = (String) requestBody.get("user");
         Notificacion notificacion = new Notificacion();
-        notificacion.setContenido((String) requestBody.get("mensaje"));
+        notificacion.setContenido((String) requestBody.get("contenido"));
         notificacion.setFechaHora(LocalDateTime.now());
         notificacion.setLeida(false);
         String respuesta = profesorService.agregarNotificacion(notificacion, user);
@@ -188,7 +188,7 @@ public class ControladorProfesor implements Observador {
     @PostMapping("/delNotif")
     public ResponseEntity<String> eliminarNotificacion(@RequestBody Map<String, Object> requestBody) throws SQLException {
         String user = (String) requestBody.get("user");
-        int idNotificacion = (int) requestBody.get("codigo");
+        int idNotificacion = Integer.parseInt(requestBody.get("codigo").toString());
         String respuesta = profesorService.eliminarNotificacion(idNotificacion, user);
         if (respuesta.startsWith("Error: ")) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(respuesta);
@@ -215,7 +215,7 @@ public class ControladorProfesor implements Observador {
         if (respuestaSubscripcion.startsWith("Error: ")) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(respuestaSubscripcion);
         } else {
-            notificacionService.agregarObservador(this);
+            notificacionService.removerObservador(this);
             return ResponseEntity.ok().body(respuestaSubscripcion);
         }
     }
@@ -225,6 +225,18 @@ public class ControladorProfesor implements Observador {
         String user = (String) requestBody.get("user");
         String codigoNotif = (String) requestBody.get("codigo");
         String respuestaMarcar = profesorService.marcarNotificacionLeida(user, codigoNotif);
+        if (respuestaMarcar.startsWith("Error: ")) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(respuestaMarcar);
+        } else {
+            return ResponseEntity.ok().body(respuestaMarcar);
+        }
+    }
+
+    @PostMapping("/marcarNotifNoLeida")
+    public ResponseEntity<String> marcarNotificacionNoLeida(@RequestBody Map<String, Object> requestBody) throws SQLException {
+        String user = (String) requestBody.get("user");
+        String codigoNotif = (String) requestBody.get("codigo");
+        String respuestaMarcar = profesorService.marcarNotificacionNoLeida(user, codigoNotif);
         if (respuestaMarcar.startsWith("Error: ")) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(respuestaMarcar);
         } else {

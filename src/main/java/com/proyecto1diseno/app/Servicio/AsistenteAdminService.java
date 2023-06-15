@@ -69,4 +69,8 @@ public class AsistenteAdminService {
     public String marcarNotificacionLeida(String user, String codigoNotif) {
         return asistenteDAO.marcarNotificacionLeida(user, codigoNotif);
     }
+
+    public String marcarNotificacionNoLeida(String user, String codigoNotif) {
+        return asistenteDAO.marcarNotificacionNoLeida(user, codigoNotif);
+    }
 }
